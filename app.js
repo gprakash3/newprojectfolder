@@ -14,9 +14,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
    
     console.log('In another middleware....');
-    res.send({"name":"ram"});
+    res.send('<h1>hello to node JS</h1>');
 });
 
-const server = http.createServer(app);
-
-server.listen(4000);
+app.listen(3000);
