@@ -4,6 +4,9 @@ const path=require('path');
 const express=require('express');
 const app=express();
 
+//importing controller file
+const errorController = require('./controllers/error');
+
 //using body parser
 const bodyparser = require('body-parser');
 app.use(bodyparser.urlencoded({extended: false}));
@@ -23,8 +26,6 @@ app.use(shoprouter);
 app.use(contactrouter);
 
 //returning 404 page if no middleware handle request
-app.use('/' , (req,res,next) => {
-    res.status(404).sendFile(path.join(rootDir, 'views', '404.html'));;
-});
+app.use('/' , errorController.errorPage);
 
 app.listen(3000);
