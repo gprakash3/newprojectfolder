@@ -1,31 +1,24 @@
-const http = require('http');
-const path=require('path');
+const path = require('path');
 
-const express=require('express');
-const app=express();
+const express = require('express');
+const bodyParser = require('body-parser');
 
-//importing controller file
 const errorController = require('./controllers/error');
 
-//using body parser
-const bodyparser = require('body-parser');
-app.use(bodyparser.urlencoded({extended: false}));
+const app = express();
 
-const rootDir = require('./util/path');
+app.set('view engine', 'ejs');
+app.set('views', 'views');
 
-app.use(express.static(path.join(rootDir, 'public')));
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
 
-//importing router from files. It is also valid middleware
-const adminrouter=require('./route/admin')
-const shoprouter=require('./route/shop');
-const contactrouter=require('./route/contact');
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-//making /admin routes as a separate filter
-app.use('/admin',adminrouter);
-app.use(shoprouter);
-app.use(contactrouter);
+app.use('/admin', adminRoutes);
+app.use(shopRoutes);
 
-//returning 404 page if no middleware handle request
-app.use('/' , errorController.errorPage);
+app.use(errorController.get404);
 
 app.listen(3000);
