@@ -13,8 +13,8 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(null, title, imageUrl, description, price);
-  Product.create({
+  
+  req.user.createProduct({
     title: title,
     price: price,
     imageUrl: imageUrl,
@@ -35,7 +35,7 @@ exports.getEditProduct = (req, res, next) => {
   const prodId = req.params.productId;
 
   //Finding product using ID
-  Product.findAll({ where: { id: prodId } })
+  req.user.getProducts({where: {id:prodId}})
     .then(products => {
       //If no product found
       if (!products[0]) {
@@ -99,7 +99,7 @@ exports.postDeleteProduct = (req, res, next) => {
 
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  req.user.getProducts()
     .then(products => {
       res.render('admin/products', {
         prods: products,
