@@ -1,18 +1,19 @@
 const path = require('path');
-const sequelize=require('./util/database');
 
 const express = require('express');
 const bodyParser = require('body-parser');
 
 const errorController = require('./controllers/error');
+const sequelize = require('./util/database');
+const Product = require('./models/product');
+const User = require('./models/user');
+const Cart = require('./models/cart');
+const CartItem = require('./models/cartItem');
 
 const app = express();
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
-
-const Product=require('./models/product');
-const User = require('./models/user');
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
@@ -20,51 +21,48 @@ const shopRoutes = require('./routes/shop');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req,res,next) => {
-    User.findByPk(1)
-    .then(user=> {
-        req.user=user;
-        next();
+app.use((req, res, next) => {
+  User.findByPk(1)
+    .then(user => {
+      req.user = user;
+      next();
     })
     .catch(err => console.log(err));
-})
-
+});
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-//user created product
-Product.belongsTo(User, {constraints:true, onDelete: 'CASCADE'});
-//one user can add more than one product
+Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
 User.hasMany(Product);
+User.hasOne(Cart);
+Cart.belongsTo(User);
+//one cart can have multiple product and single product can be part of multiple cart
+//This work with intermediate table that connect them (here connected using through: cartItem)
+Cart.belongsToMany(Product, { through: CartItem });
+Product.belongsToMany(Cart, { through: CartItem });
 
-//force: true will not be using while production as it will overwrite all data
-sequelize.sync()
-.then(result => { 
-    //may need to change this code
-    // User.findAll({where : {id:1}})
-    // .then(user=> {
-    //     console.log(user[0]);
-    //     console.log('user found here');
-    //     return user[0];
-    // })
+sequelize
+//   .sync({ force: true })
+  .sync()
+  .then(result => {
     return User.findByPk(1);
-})
-.then(user => {
-    console.log('this is user here' + user);
-    if(!user){
-        console.log(user);
-        return User.create({name: 'testname', email: 'test@test.com'});
+  })
+  .then(user => {
+    if (!user) {
+      return User.create({ name: 'Max', email: 'test@test.com' });
     }
     return user;
-})
-
-.then(user => {
-    console.log(user);
+  })
+  .then(user => {
+    // console.log(user);
+    return user.createCart();
+  })
+  .then(cart => {
     app.listen(3000);
-})
-.catch(err=>console.log(err));
-
-
+  })
+  .catch(err => {
+    console.log(err);
+  });
